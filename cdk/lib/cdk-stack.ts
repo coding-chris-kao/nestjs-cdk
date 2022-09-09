@@ -19,9 +19,7 @@ export class CdkStack extends cdk.Stack {
       this,
       'BackendHandler',
       {
-        code: lambda.DockerImageCode.fromEcr(repository, {
-          cmd: ['node', 'dist/main.local'],
-        }),
+        code: lambda.DockerImageCode.fromEcr(repository),
         timeout: Duration.seconds(30),
         retryAttempts: 1,
       }
