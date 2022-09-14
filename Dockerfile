@@ -1,11 +1,7 @@
 FROM public.ecr.aws/lambda/nodejs:16
 
-COPY api /api
+WORKDIR ${FUNCTION_DIR}
 
-WORKDIR /api
+COPY ./package.json ./package-lock.json ./dist  ${FUNCTION_DIR}
 
-RUN npm install && npm run build
-
-WORKDIR /api/dist
-
-CMD [ "main.hanlder" ]
+RUN npm install --omit=dev

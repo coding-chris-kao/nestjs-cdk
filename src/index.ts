@@ -1,9 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import serverlessExpress from '@vendia/serverless-express';
+import { configure as serverlessExpress } from '@vendia/serverless-express';
+import { eventContext } from '@vendia/serverless-express/src/middleware';
 import { APIGatewayProxyHandlerV2, Handler } from 'aws-lambda';
 import express from 'express';
 import { AppModule } from './app.module';
+import { useMiddleware } from './middleware';
 
 let cachedServer: Handler;
 
@@ -19,11 +21,15 @@ async function bootstrap() {
       new ExpressAdapter(expressApp),
     );
 
-    nestApp.enableCors();
+    useMiddleware(nestApp);
+    nestApp.use(eventContext());
 
     await nestApp.init();
 
-    cachedServer = serverlessExpress({ app: expressApp });
+    cachedServer = serverlessExpress({
+      app: expressApp,
+      binarySettings: { contentTypes: [] },
+    });
   }
 
   return cachedServer;
@@ -37,3 +43,11 @@ export const handler: APIGatewayProxyHandlerV2 = async (
   const server = await bootstrap();
   return server(event, context, callback);
 };
+
+process.on('unhandledRejection', (reason) => {
+  console.error('unhandledRejection:', reason);
+});
+
+process.on('uncaughtException', (reason) => {
+  console.error('uncaughtException:', reason);
+});
