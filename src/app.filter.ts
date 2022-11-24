@@ -12,7 +12,17 @@ export class AppExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     if (exception instanceof HttpException) {
-      response.status(exception.getStatus()).json(exception.getResponse());
+      const res = exception.getResponse() as any;
+      let error: Error;
+      let status = exception.getStatus();
+      if (res instanceof Error) {
+        status = 500;
+        error = { name: res.name, message: res.message, stack: res.stack };
+      } else {
+        error = res;
+      }
+      console.log({ error });
+      response.status(status).json(error);
     } else {
       const error = {
         statusCode: 500,
